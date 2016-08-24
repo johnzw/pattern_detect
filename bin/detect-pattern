@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+
+import patterndetect
+import os
+from shutil import copyfile
+import argparse
+
+#parse the argument
+##########################
+parser = argparse.ArgumentParser()
+parser.add_argument("src_dir", type=str, help="source directory")
+parser.add_argument("dst_dir", type=str, help="destination directory")
+parser.add_argument("gbb_dir", type=str, help="directory for the other graph")
+parser.add_argument("--verbose","-v",action="count", help="print out the details of processing to the terminal")
+
+args = parser.parse_args()
+
+#FROM the parser
+#get the directory
+SRC_DIR = args.src_dir
+if not os.path.isdir(SRC_DIR):
+	raise Exception("The source directory you type in does not exist")
+DST_DIR = args.dst_dir
+if not os.path.isdir(DST_DIR):
+	raise Exception("The destination directory you type in does not exist")
+GBB_DIR = args.gbb_dir
+if not os.path.isdir(GBB_DIR):
+	raise Exception("The garbage directory you type in does not exist")
+verbose = args.verbose
+##########################
+
+#get the files that need to be processed
+img_names = [name for name in os.listdir(SRC_DIR) if name.endswith(".jpg")]
+#for future use purpose
+output_imgs = []
+manually_check_imgs = []
+for img_name in img_names:
+	try:
+		file_path = os.path.join(SRC_DIR, img_name)
+		if patterndetect.detect(file_path, verbose=verbose):
+			#copy file
+			#the choices may be discussed
+			copyfile(file_path, os.path.join(DST_DIR, img_name))
+			output_imgs.append(img_name)
+		else:
+			copyfile(file_path, os.path.join(GBB_DIR, img_name))
+	except Exception, err:
+		print err
+		print "Warning: you need check",img_name,"later manually!"
+		manually_check_imgs.append(img_name)
+
+#print out the final information
+print "\n\n\n---------------------------------------------"
+print "processed graphs:",len(img_names)
+print "success:",len(img_names)-len(manually_check_imgs)
+if manually_check_imgs:
+	print "you need manually check the following graphs:"
+	for img in manually_check_imgs:
+		print img
+print "---------------------------------------------"
+
