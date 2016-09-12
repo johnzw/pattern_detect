@@ -176,7 +176,8 @@ def checkIntersection(im,left_boundary,right_boundary,lower,upper):
     #we need to iterate through them
     stack = []
     isPattern = False
-    
+    intersection_points = []
+
     for black_point in black_points:
         #print black_point,"left",isLeftNode((black_point[0],lower_bound), im, upper, lower),"right",isRightNode((black_point[-1],lower_bound), im, upper, lower)
         #left point
@@ -189,9 +190,9 @@ def checkIntersection(im,left_boundary,right_boundary,lower,upper):
             if stack:
                 #it is the pattern
                 isPattern = True
-                #pop out the left point
-                stack.pop()
-    return isPattern
+                #pop out the left point, and add to the intersection points
+                intersection_points.append((stack.pop(-1), black_point))
+    return isPattern, intersection_points
 
 def checkCenter(im, lower, upper, dash):
     """
@@ -216,6 +217,22 @@ def checkCenter(im, lower, upper, dash):
         	rightPart = True
     return leftPart or rightPart
 
+def calculate_intercept(left_coor, right_coor, left_boundary, right_boundary, points):
+    """
+    takes(left_coor, right_coor, left_boundary, right_boundary, points) as input
+    where left_coor, right_coor are actual boundary coordinates of the graph,
+          left_boundary, right_boundary are pixel indices
+          points are intercepts with X-axis
+    returns coordinates of those points
+    """
+    coordinates = []
+    for two_point in points:
+        for point in two_point:
+            avg_point = (point[0]+point[-1])/2
+            coordinate = left_coor + (right_coor - left_coor)*(avg_point - left_boundary)*1.0/(right_boundary - left_boundary)
+            coordinates.append(round(point, 1))
+    return coordinates
+
 def detect(img_path, verbose=True):
     """
     takes(img_path, verbose) as input
@@ -223,13 +240,15 @@ def detect(img_path, verbose=True):
           verbose is the mode to print specific info
     returns boolean value, whether a graph is the target graph
     """
+    #extra_info to store some information
+    extra_info = None
     im = Image.open(img_path)
     left,dash,right = exploreLeftToRight(im)
     upper, lower = exploreUpToDown(im)
     #check left part
-    leftOK = checkIntersection(im,left[-1],dash[0],lower,upper)
+    leftOK, left_intercept_point    s = checkIntersection(im,left[-1],dash[0],lower,upper)
     #check right part
-    rightOK = checkIntersection(im,dash[-1],right[0],lower,upper)
+    rightOK, right_intercept_points = checkIntersection(im,dash[-1],right[0],lower,upper)
     #check the center
     centerOK = checkCenter(im, lower, upper, dash)
     #print out the info
@@ -237,5 +256,9 @@ def detect(img_path, verbose=True):
         print img_path, "has pattern: ",leftOK and rightOK and centerOK
         print "More Info:"
         print "left:",leftOK,"\tright:",rightOK,"\tcenter:",centerOK
+        if leftOK and rightOK and centerOK:
+            extra_info = (calculate_intercept(-10,0,left[-1],dash[0],left_intercept_points),calculate_intercept(0,10,dash[-1],right[0],right_intercept_points))
+            print "left intercepts:",extra_info[0]
+            print "right intercepts:",extra_info[1]
         print "-------------------------------------------------------------"
-    return leftOK and rightOK and centerOK
+    return leftOK and rightOK and centerOK, extra_info
