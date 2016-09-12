@@ -230,7 +230,7 @@ def calculate_intercept(left_coor, right_coor, left_boundary, right_boundary, po
         for point in two_point:
             avg_point = (point[0]+point[-1])/2
             coordinate = left_coor + (right_coor - left_coor)*(avg_point - left_boundary)*1.0/(right_boundary - left_boundary)
-            coordinates.append(round(point, 1))
+            coordinates.append(round(coordinate, 1))
     return coordinates
 
 def detect(img_path, verbose=True):
@@ -246,7 +246,7 @@ def detect(img_path, verbose=True):
     left,dash,right = exploreLeftToRight(im)
     upper, lower = exploreUpToDown(im)
     #check left part
-    leftOK, left_intercept_point    s = checkIntersection(im,left[-1],dash[0],lower,upper)
+    leftOK, left_intercept_points = checkIntersection(im,left[-1],dash[0],lower,upper)
     #check right part
     rightOK, right_intercept_points = checkIntersection(im,dash[-1],right[0],lower,upper)
     #check the center
