@@ -37,11 +37,12 @@ manually_check_imgs = []
 for img_name in img_names:
 	try:
 		file_path = os.path.join(SRC_DIR, img_name)
-		if patterndetect.detect(file_path, verbose=verbose):
+		truth, extra_info = patterndetect.detect(file_path, verbose=verbose)
+		if truth:
 			#copy file
 			#the choices may be discussed
 			copyfile(file_path, os.path.join(DST_DIR, img_name))
-			output_imgs.append(img_name)
+			output_imgs.append((img_name,extra_info))
 		else:
 			copyfile(file_path, os.path.join(GBB_DIR, img_name))
 	except Exception, err:
@@ -57,5 +58,12 @@ if manually_check_imgs:
 	print "you need manually check the following graphs:"
 	for img in manually_check_imgs:
 		print img
+print "---------------------------------------------"
+print "\n---------------------------------------------"
+print "Target Graphs:"
+for item in output_imgs:
+	print "\n"+item[0]
+	print "left intercept:",item[1][0]
+	print "right intercept:",item[1][1]
 print "---------------------------------------------"
 
